@@ -394,7 +394,19 @@ if predict_clicked and model is not None and scaler is not None:
         st.pyplot(gauge_fig)
         plt.close(gauge_fig)
 
-        
+        # Indicative interpretation only - adjust thresholds to your project's
+        # governing standard/criteria if different.
+        if fos_pred < 1.0:
+            st.error("FOS < 1.0 \u2192 Slope is predicted to be UNSTABLE.")
+        elif fos_pred < 1.3:
+            st.warning("1.0 \u2264 FOS < 1.3 \u2192 Marginally stable. Review design.")
+        else:
+            st.success("FOS \u2265 1.3 \u2192 Slope is predicted to be STABLE.")
+
+        with st.expander("Show input values sent to the model"):
+            st.dataframe(input_df, use_container_width=True, hide_index=True)
+            st.caption("Values shown are raw inputs; the model was fed the scaled version internally.")
+            
         # ============================================================
         # ADD THIS INSIDE your "if predict_clicked and model is not None..."
         # block, right after your existing st.success/st.warning/st.error
@@ -432,18 +444,7 @@ if predict_clicked and model is not None and scaler is not None:
                 "The sensitivity chart above still applies to any model."
             )
 
-        # Indicative interpretation only - adjust thresholds to your project's
-        # governing standard/criteria if different.
-        if fos_pred < 1.0:
-            st.error("FOS < 1.0 \u2192 Slope is predicted to be UNSTABLE.")
-        elif fos_pred < 1.3:
-            st.warning("1.0 \u2264 FOS < 1.3 \u2192 Marginally stable. Review design.")
-        else:
-            st.success("FOS \u2265 1.3 \u2192 Slope is predicted to be STABLE.")
-
-        with st.expander("Show input values sent to the model"):
-            st.dataframe(input_df, use_container_width=True, hide_index=True)
-            st.caption("Values shown are raw inputs; the model was fed the scaled version internally.")
+        
 
     except Exception as e:
         st.error(f"Prediction failed with {selected_name}: {e}")
