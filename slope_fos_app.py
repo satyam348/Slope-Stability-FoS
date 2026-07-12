@@ -79,14 +79,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 st.title("\u26f0\ufe0f Slope Stability FoS Predictor GUI")
 st.caption("Choose a model, enter slope parameters, and predict the Factor of Safety")
 
-# ----------------------------------------------------------------------
-# Performance comparison table + chart
-# ----------------------------------------------------------------------
-st.subheader("Model Performance Comparison")
 
-perf_df = pd.DataFrame(
-    [{"Model": name, "R2_mean": info["r2"]} for name, info in MODEL_INFO.items()]
-).sort_values("R2_mean", ascending=False).reset_index(drop=True)
 
 
 st.divider()
@@ -334,6 +327,14 @@ with tab_table:
     )
 
 st.divider()
+# ----------------------------------------------------------------------
+# Performance comparison table + chart
+# ----------------------------------------------------------------------
+st.subheader("Model Performance Comparison")
+
+perf_df = pd.DataFrame(
+    [{"Model": name, "R2_mean": info["r2"]} for name, info in MODEL_INFO.items()]
+).sort_values("R2_mean", ascending=False).reset_index(drop=True)
 with tab_chart:
     fig, ax = plt.subplots(figsize=(8, 5))
     colors = plt.cm.Greens(np.linspace(0.4, 0.95, len(perf_df)))
