@@ -318,11 +318,12 @@ if predict_clicked and model is not None and scaler is not None:
     except Exception as e:
         st.error(f"Prediction failed with {selected_name}: {e}")
 
+st.divider()
 # ----------------------------------------------------------------------
 # Performance comparison table + chart
 # ----------------------------------------------------------------------
 st.subheader("Model Performance Comparison")
-st.divider()
+
 tab_table, tab_chart = st.tabs(["Table", "Chart"])
 
 with tab_table:
