@@ -63,7 +63,7 @@ MODEL_INFO = {
     "SVM":       {"file": "trained_svm_model.joblib",      "scaler": "trained_svm_scaler.joblib",      "r2": 0.808},
     "Voting":    {"file": "trained_voting_model.joblib",   "scaler": "trained_voting_scaler.joblib",   "r2": 0.805},
     "Stacking":  {"file": "trained_stacking_model.joblib", "scaler": "trained_stacking_scaler.joblib", "r2": 0.843},
-    "Bagging":   {"file": "trained_bagging_model.joblib",  "scaler": "trained_bagging_scaler.joblib",  "r2": 0.867},
+    "Bagging":   {"file": "trained_Bagging_model.joblib",  "scaler": "trained_Bagging_scaler.joblib",  "r2": 0.867},
     "RF":        {"file": "trained_RF_model.joblib",       "scaler": "trained_RF_scaler.joblib",       "r2": 0.869},
     "ET":        {"file": "trained_ET_model.joblib",       "scaler": "trained_ET_scaler.joblib",       "r2": 0.886},
     "XGBoost":   {"file": "trained_XGBoost_model.joblib",      "scaler": "trained_XGBoost_scaler.joblib",      "r2": 0.866},
