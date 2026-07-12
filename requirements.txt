@@ -9,3 +9,5 @@ lightgbm
 catboost
 shap==0.44.1
 numba==0.59.1
+llvmlite==0.42.0
+SALib==1.4.8
