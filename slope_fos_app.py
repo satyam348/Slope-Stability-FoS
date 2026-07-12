@@ -66,7 +66,7 @@ MODEL_INFO = {
     "Bagging":   {"file": "trained_Bagging_model.joblib",  "scaler": "trained_Bagging_scaler.joblib",  "r2": 0.867},
     "RF":        {"file": "trained_RF_model.joblib",       "scaler": "trained_RF_scaler.joblib",       "r2": 0.869},
     "ET":        {"file": "trained_ET_model.joblib",       "scaler": "trained_ET_scaler.joblib",       "r2": 0.886},
-    "XGBoost":   {"file": "trained_XGBoost_model.joblib",      "scaler": "trained_XGBoost_scaler.joblib",      "r2": 0.866},
+    "XGBoost":   {"file": "trained_XGBoost_model.joblib",  "scaler": "trained_XGBoost_scaler.joblib",  "r2": 0.866},
     "AdaBoost":  {"file": "trained_AdaBoost_model.joblib", "scaler": "trained_AdaBoost_scaler.joblib", "r2": 0.668},
     "GB":        {"file": "trained_GB_model.joblib",       "scaler": "trained_GB_scaler.joblib",       "r2": 0.848},
     "HGB":       {"file": "trained_HGB_model.joblib",      "scaler": "trained_HGB_scaler.joblib",      "r2": 0.868},
@@ -76,7 +76,7 @@ MODEL_INFO = {
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-st.title("\u26f0\ufe0f Slope Stability FoS Predictor")
+st.title("\u26f0\ufe0f Slope Stability FoS Predictor GUI")
 st.caption("Choose a model, enter slope parameters, and predict the Factor of Safety")
 
 # ----------------------------------------------------------------------
@@ -88,32 +88,20 @@ perf_df = pd.DataFrame(
     [{"Model": name, "R2_mean": info["r2"]} for name, info in MODEL_INFO.items()]
 ).sort_values("R2_mean", ascending=False).reset_index(drop=True)
 
-tab_table, tab_chart = st.tabs(["Table", "Chart"])
-
-with tab_table:
-    st.dataframe(
-        perf_df.style.format({"R2_mean": "{:.3f}"}).background_gradient(
-            subset=["R2_mean"], cmap="Greens"
-        ),
-        use_container_width=True,
-        hide_index=True,
-    )
-
-with tab_chart:
-    fig, ax = plt.subplots(figsize=(8, 5))
-    colors = plt.cm.Greens(np.linspace(0.4, 0.95, len(perf_df)))
-    bars = ax.barh(perf_df["Model"], perf_df["R2_mean"], color=colors, edgecolor="black", linewidth=0.5)
-    ax.invert_yaxis()
-    ax.set_xlabel("R\u00b2 mean", fontsize=11)
-    ax.set_xlim(0, 1.0)
-    ax.set_title("Model Performance (R\u00b2 mean)", fontsize=13, fontweight="bold")
-    ax.grid(axis="x", linestyle="--", alpha=0.4)
-    for bar, val in zip(bars, perf_df["R2_mean"]):
-        ax.text(val + 0.01, bar.get_y() + bar.get_height() / 2, f"{val:.3f}",
-                 va="center", fontsize=9)
-    plt.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+fig, ax = plt.subplots(figsize=(8, 5))
+colors = plt.cm.Greens(np.linspace(0.4, 0.95, len(perf_df)))
+bars = ax.barh(perf_df["Model"], perf_df["R2_mean"], color=colors, edgecolor="black", linewidth=0.5)
+ax.invert_yaxis()
+ax.set_xlabel("R\u00b2 mean", fontsize=11)
+ax.set_xlim(0, 1.0)
+ax.set_title("Model Performance (R\u00b2 mean)", fontsize=13, fontweight="bold")
+ax.grid(axis="x", linestyle="--", alpha=0.4)
+for bar, val in zip(bars, perf_df["R2_mean"]):
+    ax.text(val + 0.01, bar.get_y() + bar.get_height() / 2, f"{val:.3f}",
+             va="center", fontsize=9)
+plt.tight_layout()
+st.pyplot(fig)
+plt.close(fig)
 
 st.divider()
 
