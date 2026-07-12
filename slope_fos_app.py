@@ -66,7 +66,7 @@ MODEL_INFO = {
     "Bagging":   {"file": "trained_bagging_model.joblib",  "scaler": "trained_bagging_scaler.joblib",  "r2": 0.867},
     "RF":        {"file": "trained_RF_model.joblib",       "scaler": "trained_RF_scaler.joblib",       "r2": 0.869},
     "ET":        {"file": "trained_ET_model.joblib",       "scaler": "trained_ET_scaler.joblib",       "r2": 0.886},
-    "XGBoost":   {"file": "trained_XGB_model.joblib",      "scaler": "trained_XGB_scaler.joblib",      "r2": 0.866},
+    "XGBoost":   {"file": "trained_XGBoost_model.joblib",      "scaler": "trained_XGBoost_scaler.joblib",      "r2": 0.866},
     "AdaBoost":  {"file": "trained_AdaBoost_model.joblib", "scaler": "trained_AdaBoost_scaler.joblib", "r2": 0.668},
     "GB":        {"file": "trained_GB_model.joblib",       "scaler": "trained_GB_scaler.joblib",       "r2": 0.848},
     "HGB":       {"file": "trained_HGB_model.joblib",      "scaler": "trained_HGB_scaler.joblib",      "r2": 0.868},
