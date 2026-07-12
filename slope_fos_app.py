@@ -41,11 +41,102 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import streamlit as st
-
+import shap
 
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+# Which models support fast, exact SHAP explanations (tree-based).
+# KNN, SVM, Voting, and Stacking are excluded - SHAP's TreeExplainer
+# doesn't apply to them, and KernelExplainer would need a background
+# dataset this app doesn't have saved.
+TREE_BASED_MODELS = {
+    "DT", "RF", "ET", "Bagging", "AdaBoost", "GB", "HGB",
+    "XGBoost", "LightGBM", "CatBoost"
+}
+ 
+ 
+def sensitivity_tornado(model, scaler, base_input_df, feature_order, delta_pct=0.15):
+    """
+    Local sensitivity analysis: vary each feature +/- delta_pct one at a
+    time (holding the others fixed at their current value), and see how
+    much the prediction moves. Works for ANY model type.
+    """
+    base_scaled = scaler.transform(base_input_df)
+    base_pred = float(model.predict(base_scaled)[0])
+ 
+    rows = []
+    for col in feature_order:
+        up_df = base_input_df.copy()
+        down_df = base_input_df.copy()
+ 
+        # Avoid a zero delta when the value itself is 0 (e.g. ru=0)
+        step = base_input_df[col].iloc[0] * delta_pct
+        if step == 0:
+            step = 0.05  # small absolute fallback step
+ 
+        up_df[col] = up_df[col] + step
+        down_df[col] = down_df[col] - step
+ 
+        up_pred = float(model.predict(scaler.transform(up_df))[0])
+        down_pred = float(model.predict(scaler.transform(down_df))[0])
+ 
+        rows.append({
+            "Feature": col,
+            "Increase effect": up_pred - base_pred,
+            "Decrease effect": down_pred - base_pred,
+        })
+ 
+    return pd.DataFrame(rows), base_pred
+ 
+ 
+def plot_tornado(sens_df):
+    sens_df = sens_df.copy()
+    sens_df["max_abs"] = sens_df[["Increase effect", "Decrease effect"]].abs().max(axis=1)
+    sens_df = sens_df.sort_values("max_abs", ascending=True)
+ 
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    y_pos = np.arange(len(sens_df))
+ 
+    ax.barh(y_pos, sens_df["Increase effect"], color="#2ecc71", label="Feature increased 15%", edgecolor="black", linewidth=0.4)
+    ax.barh(y_pos, sens_df["Decrease effect"], color="#e74c3c", label="Feature decreased 15%", edgecolor="black", linewidth=0.4)
+ 
+    ax.axvline(0, color="black", linewidth=1)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(sens_df["Feature"])
+    ax.set_xlabel("Change in predicted FOS")
+    ax.set_title("Local Sensitivity - which inputs move this prediction most", fontsize=11, fontweight="bold")
+    ax.legend(loc="lower right", fontsize=8)
+    ax.grid(axis="x", linestyle="--", alpha=0.4)
+    plt.tight_layout()
+    return fig
+ 
+ 
+def plot_shap_waterfall(model, scaler, input_df, feature_order, selected_name):
+    """SHAP explanation for the current single prediction. Tree models only."""
+    input_scaled = scaler.transform(input_df)
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(input_scaled)
+ 
+    # Handle both 1D and 2D shap_values return shapes across model types
+    values = np.array(shap_values).reshape(-1)
+    base_value = explainer.expected_value
+    if isinstance(base_value, (list, np.ndarray)):
+        base_value = float(np.array(base_value).reshape(-1)[0])
+ 
+    explanation = shap.Explanation(
+        values=values,
+        base_values=base_value,
+        data=input_scaled[0],
+        feature_names=feature_order,
+    )
+ 
+    fig = plt.figure(figsize=(8, 4.5))
+    shap.plots.waterfall(explanation, show=False)
+    plt.title(f"SHAP contribution to this {selected_name} prediction", fontsize=11, fontweight="bold")
+    plt.tight_layout()
+    return fig
+ 
 # ----------------------------------------------------------------------
 # Page config
 # ----------------------------------------------------------------------
@@ -302,6 +393,44 @@ if predict_clicked and model is not None and scaler is not None:
         gauge_fig = draw_fos_gauge(fos_pred)
         st.pyplot(gauge_fig)
         plt.close(gauge_fig)
+
+        
+        # ============================================================
+        # ADD THIS INSIDE your "if predict_clicked and model is not None..."
+        # block, right after your existing st.success/st.warning/st.error
+        # stability message, before the "with st.expander(...)" block
+        # ============================================================
+        
+        st.subheader("Why this prediction? (Explainability)")
+        
+        sens_df, base_pred = sensitivity_tornado(model, scaler, input_df, FEATURE_ORDER)
+        tornado_fig = plot_tornado(sens_df)
+        st.pyplot(tornado_fig)
+        plt.close(tornado_fig)
+        st.caption(
+            "Shows how much the predicted FOS would change if each input were "
+            "individually increased or decreased by 15%, holding everything else "
+            "fixed at your entered values. Longer bars = the model is more "
+            "sensitive to that input around this specific prediction."
+        )
+        
+        if selected_name in TREE_BASED_MODELS:
+            try:
+                shap_fig = plot_shap_waterfall(model, scaler, input_df, FEATURE_ORDER, selected_name)
+                st.pyplot(shap_fig)
+                plt.close(shap_fig)
+                st.caption(
+                    "SHAP values show how each input pushed this specific prediction "
+                    "up (red) or down (blue) relative to the model's average output."
+                )
+            except Exception as e:
+                st.info(f"SHAP explanation unavailable for this model: {e}")
+        else:
+            st.info(
+                f"SHAP explanations aren't available for {selected_name} in this app "
+                "(it requires a saved background dataset for non-tree models). "
+                "The sensitivity chart above still applies to any model."
+            )
 
         # Indicative interpretation only - adjust thresholds to your project's
         # governing standard/criteria if different.
