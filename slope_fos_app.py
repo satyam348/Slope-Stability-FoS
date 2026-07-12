@@ -88,20 +88,6 @@ perf_df = pd.DataFrame(
     [{"Model": name, "R2_mean": info["r2"]} for name, info in MODEL_INFO.items()]
 ).sort_values("R2_mean", ascending=False).reset_index(drop=True)
 
-fig, ax = plt.subplots(figsize=(8, 5))
-colors = plt.cm.Greens(np.linspace(0.4, 0.95, len(perf_df)))
-bars = ax.barh(perf_df["Model"], perf_df["R2_mean"], color=colors, edgecolor="black", linewidth=0.5)
-ax.invert_yaxis()
-ax.set_xlabel("R\u00b2 mean", fontsize=11)
-ax.set_xlim(0, 1.0)
-ax.set_title("Model Performance (R\u00b2 mean)", fontsize=13, fontweight="bold")
-ax.grid(axis="x", linestyle="--", alpha=0.4)
-for bar, val in zip(bars, perf_df["R2_mean"]):
-    ax.text(val + 0.01, bar.get_y() + bar.get_height() / 2, f"{val:.3f}",
-             va="center", fontsize=9)
-plt.tight_layout()
-st.pyplot(fig)
-plt.close(fig)
 
 st.divider()
 
@@ -334,6 +320,35 @@ if predict_clicked and model is not None and scaler is not None:
 
     except Exception as e:
         st.error(f"Prediction failed with {selected_name}: {e}")
+
+
+tab_table, tab_chart = st.tabs(["Table", "Chart"])
+
+with tab_table:
+    st.dataframe(
+        perf_df.style.format({"R2_mean": "{:.3f}"}).background_gradient(
+            subset=["R2_mean"], cmap="Greens"
+        ),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+st.divider()
+with tab_chart:
+    fig, ax = plt.subplots(figsize=(8, 5))
+    colors = plt.cm.Greens(np.linspace(0.4, 0.95, len(perf_df)))
+    bars = ax.barh(perf_df["Model"], perf_df["R2_mean"], color=colors, edgecolor="black", linewidth=0.5)
+    ax.invert_yaxis()
+    ax.set_xlabel("R\u00b2 mean", fontsize=11)
+    ax.set_xlim(0, 1.0)
+    ax.set_title("Model Performance (R\u00b2 mean)", fontsize=13, fontweight="bold")
+    ax.grid(axis="x", linestyle="--", alpha=0.4)
+    for bar, val in zip(bars, perf_df["R2_mean"]):
+        ax.text(val + 0.01, bar.get_y() + bar.get_height() / 2, f"{val:.3f}",
+                 va="center", fontsize=9)
+    plt.tight_layout()
+    st.pyplot(fig)
+    plt.close(fig)
 
 st.divider()
 st.caption(
